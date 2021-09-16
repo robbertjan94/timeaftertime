@@ -26,8 +26,8 @@ if True:
             yield self.x
             yield self.y
 
-        # def to_tuple(self) -> Tuple[int,int]:
-        #     return (self.x, self.y)
+        def to_tuple(self) -> Tuple[int,int]:
+            return (self.x, self.y)
 
         def get_neighbors(coord: Coord) -> List[Coord]:
             return  [Coord(coord.x - 1, coord.y), 
@@ -50,13 +50,11 @@ if True:
             row_idx, col_idx = invert_list_of_coords(self.coords)
             arr = [["-" for _ in range(max(col_idx)+1)] for _ in range(max(row_idx)+1)]
             arr = np.asarray(arr, dtype=object)
-            # for coord in self.coords:
-            #     arr[coord.to_tuple()] = self.color
             arr[self.to_tuple()] = self.color
             return arr.__str__().replace('\'', '')
         
-        # def to_tuple(self):
-        #     return [c.to_tuple() for c in self.coords]
+        def to_tuple(self):
+            return [c.to_tuple() for c in self.coords]
 
         def _is_connected(self, coords: List[Coord]) -> bool:
             """Use a depth-first search (DFS) algorithm to check if all coordinates are connected.
@@ -194,4 +192,3 @@ if True:
                      (max(col_idx) < self.width)) &
                     ((min(row_idx) >= 0) & 
                     (min(col_idx) >= 0)))
-
