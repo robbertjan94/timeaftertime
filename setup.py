@@ -6,7 +6,7 @@ setuptools.setup(
     url="",
     author="Robbert-Jan 't Hoen",
     author_email="robbertjanthoen@gmail.com",
-    description="Custom playing card generator for 'Keer op Keer 2'",
+    description="Package for 'Keer op Keer 2'",
     long_description=open('README.md').read(),
     packages=setuptools.find_packages(),
     install_requires=[],
