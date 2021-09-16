@@ -7,12 +7,6 @@ import numpy as np
 def invert_list_of_coords(coords: List[Coord]) -> Tuple[List[int],List[int]]:
     return list(map(list, zip(*coords)))
 
-def get_neighbors(coord: Coord) -> List[Coord]:
-    return [Coord(coord.x - 1, coord.y), 
-            Coord(coord.x + 1, coord.y), 
-            Coord(coord.x, coord.y - 1), 
-            Coord(coord.x, coord.y + 1)]
-
 def flatten_list(list_of_lists: List[List]) -> List:
     return [item for sublist in list_of_lists for item in sublist]
 
@@ -32,8 +26,14 @@ if True:
             yield self.x
             yield self.y
 
-        def to_tuple(self) -> Tuple[int,int]:
-            return (self.x, self.y)
+        # def to_tuple(self) -> Tuple[int,int]:
+        #     return (self.x, self.y)
+
+        def get_neighbors(coord: Coord) -> List[Coord]:
+            return  [Coord(coord.x - 1, coord.y), 
+                     Coord(coord.x + 1, coord.y), 
+                     Coord(coord.x, coord.y - 1), 
+                     Coord(coord.x, coord.y + 1)]
 
 if True:
     @dataclass
@@ -55,8 +55,8 @@ if True:
             arr[self.to_tuple()] = self.color
             return arr.__str__().replace('\'', '')
         
-        def to_tuple(self):
-            return [c.to_tuple() for c in self.coords]
+        # def to_tuple(self):
+        #     return [c.to_tuple() for c in self.coords]
 
         def _is_connected(self, coords: List[Coord]) -> bool:
             """Use a depth-first search (DFS) algorithm to check if all coordinates are connected.
@@ -70,7 +70,7 @@ if True:
                 return True
 
             def find_neighbors(coord, coords):
-                candidates = get_neighbors(coord)    
+                candidates = coord.get_neighbors()  
                 return [c for c in candidates if c in coords]
 
             seen = set()
@@ -165,7 +165,7 @@ if True:
         def coords_available_color(self, color: int) -> List[Coord]:
             available_coords = self.coords_available()
             color_coords = self._get_color_coords(color)
-            color_neighbor_coords = flatten_list([get_neighbors(coord) for coord in color_coords])
+            color_neighbor_coords = flatten_list([coord.get_neighbors() for coord in color_coords])
             return [coord for coord in available_coords if coord not in color_neighbor_coords]
         
         def _get_board_coords(self) -> List[Coord]:

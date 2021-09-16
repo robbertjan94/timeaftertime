@@ -2,12 +2,41 @@ import pytest
 
 from timeaftertime.core import Coord, Block, Board
 
+# Coord tests
+def test_coord_initialization():
+    coord = Coord(0,0)
+    assert (coord.x == 0) & (coord.y == 0)
+
+def test_coord_eq():
+    coord1 = Coord(1,2)
+    coord2 = Coord(3,3)
+    assert coord1 == coord1
+    assert coord1 != coord2
+
+def test_coord_iterable():
+    coord = Coord(1,2)
+    assert [x for x in coord] == [1,2]
+
+def test_coord_get_neighbors():
+    coord = Coord(0,0)
+    neighbors = coord.get_neighbors()
+    assert neighbors == [Coord(-1,0), 
+                         Coord(1,0),
+                         Coord(0,-1),
+                         Coord(0,1)]
+
 # Block tests
 
-def test_block_initialization():
+def test_block_empty_initialization():
     block = Block()
     assert ((block.coords == []) &
              block.color == 0)
+
+def test_block_initialization():
+    block = Block()
+    block = Block([Coord(0,0)], 1)
+    assert ((block.coords == [Coord(0,0)]) &
+             block.color == 1)
 
 def test_block_add_coord():
     block = Block([Coord(0,0)])
