@@ -1,39 +1,64 @@
 from __future__ import annotations  # necessary until python 4.0 for future references
-from typing import List, Tuple
+from typing import List, Tuple, Hashable, Generator
 from dataclasses import dataclass, field
 
 import numpy as np
 
-def invert_list_of_tuples(coords: List[Tuple[int,int]]) -> Tuple[List[int],List[int]]:
+def invert_list_of_coords(coords: List[Coord]) -> Tuple[List[int],List[int]]:
     return list(map(list, zip(*coords)))
 
-def get_neighbors(coord: Tuple[int,int]) -> List[Tuple[int,int]]:
-    x, y = coord
-    return [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
+def get_neighbors(coord: Coord) -> List[Coord]:
+    return [Coord(coord.x - 1, coord.y), 
+            Coord(coord.x + 1, coord.y), 
+            Coord(coord.x, coord.y - 1), 
+            Coord(coord.x, coord.y + 1)]
 
 def flatten_list(list_of_lists: List[List]) -> List:
     return [item for sublist in list_of_lists for item in sublist]
 
 if True:
     @dataclass
+    class Coord:
+        x: int
+        y: int
+
+        def __hash__(self) -> Hashable:
+            return hash(str(self))
+
+        def __eq__(self, other: Coord) -> bool:
+            return (self.x == other.x) & (self.y == other.y)
+        
+        def __iter__(self) -> Generator[int, int, None]:
+            yield self.x
+            yield self.y
+
+        def to_tuple(self) -> Tuple[int,int]:
+            return (self.x, self.y)
+
+if True:
+    @dataclass
     class Block:
-        coords: List[Tuple[int, int]] = field(default_factory=list)
+        coords: List[Coord] = field(default_factory=list)
         color: int = 0
 
         def __post_init__(self):
             assert self.is_empty(self.coords) | self._is_connected(self.coords)
 
-        def __str__(self):
+        def __str__(self) -> str:
             if self.is_empty(self.coords):
                 return np.arary([]).__str__()
-            row_idx, col_idx = invert_list_of_tuples(self.coords)
+            row_idx, col_idx = invert_list_of_coords(self.coords)
             arr = [["-" for _ in range(max(col_idx)+1)] for _ in range(max(row_idx)+1)]
             arr = np.asarray(arr, dtype=object)
-            for coord in self.coords:
-                arr[coord] = self.color
+            # for coord in self.coords:
+            #     arr[coord.to_tuple()] = self.color
+            arr[self.to_tuple()] = self.color
             return arr.__str__().replace('\'', '')
+        
+        def to_tuple(self):
+            return [c.to_tuple() for c in self.coords]
 
-        def _is_connected(self, coords: List[Tuple[int, int]]) -> bool:
+        def _is_connected(self, coords: List[Coord]) -> bool:
             """Use a depth-first search (DFS) algorithm to check if all coordinates are connected.
             
             See: https://stackoverflow.com/questions/20583878/python-check-if-coordinates-of-values-in-a-grid-connect-to-one-another/20583999
@@ -59,24 +84,24 @@ if True:
         def is_empty(self, coords) -> bool:
             return len(coords) == 0
         
-        def add_coord(self, coord: Tuple[int, int]) -> List[Tuple[int,int]]:
+        def add_coord(self, coord: Coord) -> List[Coord]:
             assert coord not in self.coords
             coords_extended = self.coords + [coord]
             assert self._is_connected(coords_extended)
             self.coords = coords_extended
         
-        def add_coords(self, coords: List[Tuple[int, int]]) -> List[Tuple[int,int]]:
+        def add_coords(self, coords: List[Coord]) -> List[Coord]:
             coords_extended = self.coords + coords
             assert len(coords_extended) == len(set(coords_extended))
             assert self._is_connected(coords_extended)
             self.coords = coords_extended
 
-        def remove_coord(self, coord: Tuple[int,int]) -> List[Tuple[int,int]]:
+        def remove_coord(self, coord: Coord) -> List[Coord]:
             coords = [c for c in self.coords if c != coord]
             assert self.is_empty(coords) | self._is_connected(coords)
             self.coords = coords
         
-        def remove_coords(self, coords: List[Tuple[int, int]]) -> List[Tuple[int,int]]:
+        def remove_coords(self, coords: List[Coord]) -> List[Coord]:
             coords = [c for c in self.coords if c not in coords]
             assert self.is_empty(coords) | self._is_connected(coords)
             self.coords = coords
@@ -98,7 +123,7 @@ if True:
             if not overlap_allowed:
                 are_neighbors &= not self.overlaps(other)
             return are_neighbors
-
+        
 if True:
     @dataclass
     class Board:
@@ -106,13 +131,13 @@ if True:
         width: int
         blocks: List[Block] = field(default_factory=list)
         
-        def add_block(self, other: Block):
+        def add_block(self, other: Block) -> None:
             assert not self._overlaps(other)
             assert not self._neighbors_same_color(other)
             assert self._within_bounds(other)
             self.blocks.append(other)
 
-        def remove_block(self, other: Block):
+        def remove_block(self, other: Block) -> None:
             self.blocks.remove(other)
         
         def is_empty(self):
@@ -131,21 +156,26 @@ if True:
                 coords.extend(block.coords)
             return len(set(coords)) == self.width * self.height
 
-        def coords_available(self) -> List[Tuple[int,int]]:
-            coords = [[(i,j) for i in range(self.width)] for j in range(self.height)]
-            coords = flatten_list(coords)
+        def coords_available(self) -> List[Coord]:
+            coords = self._get_board_coords()
             for block in self.blocks:
                 coords = [c for c in coords if c not in block.coords]
             return coords
 
-        def coords_available_color(self, color: int) -> List[Tuple[int,int]]:
+        def coords_available_color(self, color: int) -> List[Coord]:
             available_coords = self.coords_available()
-            color_coords = [block.coords for block in self.blocks if block.color == color]
-            color_coords = flatten_list(color_coords)
-            color_neighbor_coords = [get_neighbors(coord) for coord in color_coords]
-            color_neighbor_coords = flatten_list(color_neighbor_coords)
+            color_coords = self._get_color_coords(color)
+            color_neighbor_coords = flatten_list([get_neighbors(coord) for coord in color_coords])
             return [coord for coord in available_coords if coord not in color_neighbor_coords]
         
+        def _get_board_coords(self) -> List[Coord]:
+            coords = [[Coord(i,j) for i in range(self.width)] for j in range(self.height)]
+            return flatten_list(coords)
+
+        def _get_color_coords(self, color: int) -> List[Coord]:
+            color_coords = [block.coords for block in self.blocks if block.color == color]
+            return flatten_list(color_coords)
+
         def _overlaps(self, other: Block) -> bool:
             for block in self.blocks:
                 if block.overlaps(other):
@@ -159,6 +189,9 @@ if True:
             return False
 
         def _within_bounds(self, other: Block) -> bool:
-            row_idx, col_idx = invert_list_of_tuples(other.coords)
-            return ((max(row_idx) < self.height) &
-                    (max(col_idx) < self.width))
+            row_idx, col_idx = invert_list_of_coords(other.coords)
+            return (((max(row_idx) < self.height) & 
+                     (max(col_idx) < self.width)) &
+                    ((min(row_idx) >= 0) & 
+                    (min(col_idx) >= 0)))
+
