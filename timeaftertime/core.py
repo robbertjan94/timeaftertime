@@ -1,5 +1,5 @@
 from __future__ import annotations  # necessary until python 4.0 for future references
-from typing import List, Tuple, Hashable, Generator
+from typing import List, Tuple, Hashable, Generator, Dict
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -29,11 +29,14 @@ if True:
         def to_tuple(self) -> Tuple[int,int]:
             return (self.x, self.y)
 
-        def get_neighbors(coord: Coord) -> List[Coord]:
-            return  [Coord(coord.x - 1, coord.y), 
-                     Coord(coord.x + 1, coord.y), 
-                     Coord(coord.x, coord.y - 1), 
-                     Coord(coord.x, coord.y + 1)]
+        def get_neighbors(self) -> List[Coord]:
+            return  [Coord(self.x - 1, self.y), 
+                     Coord(self.x + 1, self.y), 
+                     Coord(self.x, self.y - 1), 
+                     Coord(self.x, self.y + 1)]
+        
+        def distance(self, other):
+            return abs(self.x-other.x) + abs(self.y-other.y)
 
 if True:
     @dataclass
@@ -128,12 +131,24 @@ if True:
         height: int
         width: int
         blocks: List[Block] = field(default_factory=list)
+        attributes : Dict[str, List[Coord]] = field(default_factory=dict)
+
+        def __str__(self) -> str:
+            arr = [["-" for _ in range(self.width)] for _ in range(self.height)]
+            arr = np.asarray(arr, dtype=object)
+            for block in self.blocks:
+                for coord in block.coords:
+                    arr[coord.to_tuple()] = block.color
+            return arr.__str__().replace('\'', '')
         
         def add_block(self, other: Block) -> None:
             assert not self._overlaps(other)
             assert not self._neighbors_same_color(other)
             assert self._within_bounds(other)
             self.blocks.append(other)
+        
+        def add_attribute(self, name, values):
+            self.attributes[name] = values
 
         def remove_block(self, other: Block) -> None:
             self.blocks.remove(other)
@@ -167,7 +182,7 @@ if True:
             return [coord for coord in available_coords if coord not in color_neighbor_coords]
         
         def _get_board_coords(self) -> List[Coord]:
-            coords = [[Coord(i,j) for i in range(self.width)] for j in range(self.height)]
+            coords = [[Coord(i,j) for i in range(self.height)] for j in range(self.width)]
             return flatten_list(coords)
 
         def _get_color_coords(self, color: int) -> List[Coord]:
