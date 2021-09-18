@@ -1,6 +1,6 @@
 from __future__ import annotations
 from timeaftertime.core import Coord, Block, Board
-from typing import List, Tuple, Hashable, Generator
+from typing import List, Tuple, Hashable, Generator, Dict
 from dataclasses import dataclass, field
 
 from random import choice, sample
@@ -14,7 +14,8 @@ class GameBoard:
         self.num_colors = 5
         self.max_block_size = 6
         self.num_attributes = {'dice': 5, 'star': 13}
-        self.start_column = 0
+        self.attributes = {}
+        self.layout = {}
         self.board = None
 
     def initialize(self):
@@ -23,8 +24,14 @@ class GameBoard:
     def generate(self):
         while not self.board.is_full():
             self.draw_block()
-        self.draw_start_column()
         self.draw_attributes()
+        self.draw_layout()
+
+    def add_attribute(self, name, values):
+        self.attributes[name] = values
+    
+    def add_layout(self, name, values):
+        self.layout[name] = values
     
     def draw_block(self):
         available_coords = []
@@ -44,10 +51,33 @@ class GameBoard:
             coords = []
             for idx in sample(range(len(self.board.blocks)),k=num):
                 coords.append(choice(self.board.blocks[idx].coords))
-            self.board.add_attribute(attribute, coords)
+            self.add_attribute(attribute, coords)
 
-    def draw_start_column(self):
-        self.start_column = choice(range(ceil(self.width*1/3),floor(self.width*2/3)))
+    def draw_layout(self):
+        # start column
+        start_column = choice(range(ceil(self.width*1/3),floor(self.width*2/3)))
+        self.add_layout('start_column', start_column)
+        
+        # row/col names
+        col_names = list(range(self.width))
+        self.add_layout('col_names', col_names)
+        self.add_layout('row_names', list(range(col_names[-1]+1, col_names[-1]+1+self.height)))
+
+        # row/col scores
+        self.add_layout('row_scores', [5]*self.height)
+        col_scores_top = []
+        for (n, i) in enumerate([x - start_column for x in range(self.width)]):
+            if i != 0:
+                col_scores_top.append(2 + floor((abs(i)-1)/3))
+        col_scores_top[0] = col_scores_top[1] + 2
+        col_scores_top[-1] = col_scores_top[-2] + 2
+        self.add_layout('col_scores_top', col_scores_top)
+        col_scores_bottom = [ceil(x/2) for x in col_scores_top]
+        self.add_layout('col_scores_bottom', col_scores_bottom)
+
+        # row attributes
+        row_attributes = ([1,2,3]*ceil(self.height/3))[:self.height]
+        self.add_layout('row_attributes', sample(row_attributes, k=self.height))
 
     def _draw_connected_coords(self, origin, coords, length):
         stop_loop = False
@@ -65,7 +95,7 @@ class GameBoard:
                 coords.remove(neighboring_coord)
         return connected_coords
 
-game_board = GameBoard(20,13)
+game_board = GameBoard(7,15)
 game_board.initialize()
 game_board.generate()
 print(game_board.board)

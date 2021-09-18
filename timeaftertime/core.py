@@ -131,7 +131,6 @@ if True:
         height: int
         width: int
         blocks: List[Block] = field(default_factory=list)
-        attributes : Dict[str, List[Coord]] = field(default_factory=dict)
 
         def __str__(self) -> str:
             arr = [["-" for _ in range(self.width)] for _ in range(self.height)]
@@ -146,9 +145,6 @@ if True:
             assert not self._neighbors_same_color(other)
             assert self._within_bounds(other)
             self.blocks.append(other)
-        
-        def add_attribute(self, name, values):
-            self.attributes[name] = values
 
         def remove_block(self, other: Block) -> None:
             self.blocks.remove(other)
