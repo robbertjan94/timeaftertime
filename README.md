@@ -10,10 +10,19 @@ Actual playing board:
 
 <img src="images/keeropkeer2_playing_board_actual.png" width="400" />
 
-Generated playing board:
+Generated playing board (normal size):
 
 <img src="images/keeropkeer2_playing_board_generated.png" width="400" />
 
+## Custom playing boards
+
+Generated playing board (small):
+
+<img src="images/keeropkeer2_playing_board_generated_small.png" width="400" />
+
+Generated playing board (large):
+
+<img src="images/keeropkeer2_playing_board_generated_large.png" width="400" />
 
 ## Author(s)
 Robbert-Jan 't Hoen
