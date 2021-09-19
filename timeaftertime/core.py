@@ -177,6 +177,9 @@ if True:
             color_neighbor_coords = flatten_list([coord.get_neighbors() for coord in color_coords])
             return [coord for coord in available_coords if coord not in color_neighbor_coords]
         
+        def shape(self):
+            return (self.height, self.width)
+
         def _get_board_coords(self) -> List[Coord]:
             coords = [[Coord(i,j) for i in range(self.height)] for j in range(self.width)]
             return flatten_list(coords)
