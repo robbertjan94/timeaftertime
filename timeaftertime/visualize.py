@@ -28,13 +28,8 @@ MARGIN_TOP = 20
 
 # generate keeropkeer playing board
 game_board = GameBoard()
-# game_board.width = 25
-# game_board.height = 15
 game_board.initialize()
 game_board.generate()
-print(game_board)
-print(game_board.layout['dice'])
-print(game_board.layout['star'])
 
 # Set the HEIGHT and WIDTH of the screen
 nrows = game_board.height

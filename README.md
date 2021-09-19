@@ -10,7 +10,7 @@ Actual playing board:
 
 <img src="images/keeropkeer2_playing_board_actual.png" width="400" />
 
-Generated playing board (normal size):
+Generated playing board:
 
 <img src="images/keeropkeer2_playing_board_generated.png" width="400" />
 
